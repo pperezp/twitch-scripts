@@ -1,32 +1,26 @@
-let interval;
+let bonificationThread;
+let pointsThread;
 let oldPoints;
+let totalEarnedScore = 0;
 
-function startBotBonification() {
-    interval = setInterval(function () {
-        let divs = document.getElementsByTagName("div");
-        let searchText = "¡Haz clic para hacerte con una bonificación!";
-        let found;
+function startBonificationBot() {
+    console.clear();
+    bonificationBot();
+    bonificationThread = setInterval(bonificationBot, (1000 * 60));
+}
 
-        for (let i = 0; i < divs.length; i++) {
-            if (divs[i].textContent == searchText) {
-                oldPoints = getBalancePoints();
-                console.log("Encontrado " + new Date());
-                found = divs[i];
-                found.children[0].children[0].children[0].children[0].click();
+function bonificationBot(){
+    let divs = document.getElementsByTagName("div");
+    let searchText = "¡Haz clic para hacerte con una bonificación!";
+    let found;
 
-                setTimeout(() => { 
-                    let currentPoints = getBalancePoints();
-                    console.log("Current points: " + currentPoints + " (+" + (currentPoints - oldPoints) + ")");
-                }, 1000);
-
-                break;
-            }
+    for (let i = 0; i < divs.length; i++) {
+        if (divs[i].textContent == searchText) {
+            found = divs[i];
+            found.children[0].children[0].children[0].children[0].click();
+            break;
         }
-
-        if(found === undefined){
-            console.log("No encontrado " + new Date());
-        }
-    }, (1000 * 60));
+    }
 }
 
 function getBalancePoints(){
@@ -37,8 +31,34 @@ function getBalancePoints(){
     }
 }
 
-function stopInterval(){
-    clearInterval(interval);
+function startPointsThread(){
+    oldPoints = getBalancePoints();
+
+    console.log("Current Points: " + oldPoints);
+
+    pointsThread = setInterval(function() {
+        let currentPoints = getBalancePoints();
+
+        if(currentPoints != oldPoints){
+            let differencePoints = currentPoints - oldPoints;
+            console.log("Points has changed: " + " From " + oldPoints + " to " + currentPoints + " (+" + differencePoints + ")");
+            oldPoints = currentPoints;
+            accumalateScore(differencePoints);
+            console.log("Total Earned Score: " + totalEarnedScore);
+        }
+    }, (1000));
 }
 
-startBotBonification();
+function accumalateScore(score){
+    totalEarnedScore += score;
+}
+
+function stopInterval(){
+    clearInterval(bonificationThread);
+    console.log("bonificationThread stoped");
+    clearInterval(pointsThread);
+    console.log("pointsThread stoped");
+}
+
+startBonificationBot();
+startPointsThread();
