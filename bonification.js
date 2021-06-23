@@ -2,51 +2,73 @@ let bonificationThread;
 let pointsThread;
 let oldPoints;
 let totalEarnedScore = 0;
+let bonificationKeyWords = ["bonificación", "bono"];
 
-function startBonificationBot() {
+function startBonificationThread() {
     console.clear();
-    bonificationBot();
-    bonificationThread = setInterval(bonificationBot, (1000 * 60));
+    bonificationThreadBody();
+    bonificationThread = setInterval(bonificationThreadBody, (1000));
 }
 
-function bonificationBot(){
-    let divs = document.getElementsByTagName("div");
-    let searchText = "¡Haz clic para hacerte con una bonificación!";
-    let found;
+function startPointsThread(){
+    oldPoints = getBalancePoints();
+    console.log("Current Points: " + oldPoints);
+    pointsThread = setInterval(pointsThreadBody, (1000));
+}
 
-    for (let i = 0; i < divs.length; i++) {
-        if (divs[i].textContent == searchText) {
-            found = divs[i];
-            found.children[0].children[0].children[0].children[0].click();
+function bonificationThreadBody(){
+    for(let button of getAllButtons()){
+        if(isBonificationButtonExist(button)){
+            button.click();
             break;
         }
     }
 }
 
+function pointsThreadBody(){
+    let currentPoints = getBalancePoints();
+
+    if(currentPoints != oldPoints){
+        let differencePoints = currentPoints - oldPoints;
+        console.log("Points has changed: " + " From " + oldPoints + " to " + currentPoints + " (+" + differencePoints + ")");
+        oldPoints = currentPoints;
+        accumalateScore(differencePoints);
+        console.log("Total Earned Score: " + totalEarnedScore);
+    }
+}
+
 function getBalancePoints(){
-    for(let div of document.getElementsByTagName("div")){
-        if(div.dataset.testSelector != undefined && div.dataset.testSelector == "balance-string"){
+    for(let div of getAllDivs()){
+        if(isBalanceStringDiv(div)){
             return Number.parseInt(div.children[0].innerHTML);
         }
     }
 }
 
-function startPointsThread(){
-    oldPoints = getBalancePoints();
+function getAllButtons(){
+    return document.getElementsByTagName("button");
+}
 
-    console.log("Current Points: " + oldPoints);
+function getAllDivs(){
+    return document.getElementsByTagName("div");
+}
 
-    pointsThread = setInterval(function() {
-        let currentPoints = getBalancePoints();
+function isBonificationButtonExist(button){
+    if(button.ariaLabel == undefined){
+        return false;
+    }
 
-        if(currentPoints != oldPoints){
-            let differencePoints = currentPoints - oldPoints;
-            console.log("Points has changed: " + " From " + oldPoints + " to " + currentPoints + " (+" + differencePoints + ")");
-            oldPoints = currentPoints;
-            accumalateScore(differencePoints);
-            console.log("Total Earned Score: " + totalEarnedScore);
+    for(let bonificationKeyWord of bonificationKeyWords){
+        if(button.ariaLabel.includes(bonificationKeyWord)){
+            return true;
         }
-    }, (1000));
+    }
+
+    return false;
+}
+
+function isBalanceStringDiv(div){
+    return div.dataset.testSelector != undefined && div.dataset.testSelector == "balance-string";
 }
 
 function accumalateScore(score){
@@ -60,5 +82,5 @@ function stopInterval(){
     console.log("pointsThread stoped");
 }
 
-startBonificationBot();
+startBonificationThread();
 startPointsThread();
